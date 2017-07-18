@@ -1,0 +1,61 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+  name: {{ .Chart.Name }}
+
+spec:
+  # stage: {{ required "please pass in stage with '--set stage={dev|prod}'" .Values.stage }}
+  replicas: {{ index .Values.replicaCount .Values.stage }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        {{ if .Values.command }}command: {{ .Values.command }}{{end}}
+
+        image: {{ .Values.image.repository }}:{{ required "please pass in docker image tag '--set image.tag=<docker-tag>'" .Values.image.tag }}
+
+        # hier bitte die limits der app einstellen. Nicht vergessen, Java immer mit heap limit wie z.B. '-Xmx512m' zu starten
+        # die Heap-Größe für den Java-Prozess muss kleiner als das hier angegebene Limit sein, da die JVM selbst
+        # auch Speicher benötigt
+        resources:
+          limits:
+            memory: {{ .Values.memoryLimit }}
+
+        # hier können entsprechende environment Variablen gesetzt werden
+        env:
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+
+        ports:
+        # der Port, an dem der Container lauschen soll
+        - containerPort: {{ .Values.containerPort }}
+
+        # health check: Pfad und Port, an dem ein Health-Check ausgeführt werden soll
+        # Falls der Service keinen Health-Check besitzt (batch-Job), diesen Block einfach löschen
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.path }}
+            port: {{ .Values.healthCheck.port }}
+            scheme: "{{ .Values.healthCheck.scheme | default "HTTP" }}"
+          periodSeconds: 5
+          initialDelaySeconds: 5
+          successThreshold: 1
+          failureThreshold: 10
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.path }}
+            port: {{ .Values.healthCheck.port }}
+            scheme: "{{ .Values.healthCheck.scheme | default "HTTP" }}"
+          initialDelaySeconds: 60
+          periodSeconds: 3

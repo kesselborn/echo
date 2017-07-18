@@ -1,0 +1,6 @@
+apiVersion: v1
+description: breuninger echo
+version: 0.1.0
+
+# Name der Applikation
+name: echo

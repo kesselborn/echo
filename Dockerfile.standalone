@@ -1,0 +1,5 @@
+FROM scratch
+COPY echo-linux /echo
+COPY key.pem cert.pem /
+EXPOSE 80 443
+CMD ["/echo", "-addr=0.0.0.0:80"]

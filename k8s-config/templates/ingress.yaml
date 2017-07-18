@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name }}
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "{{ .Values.http2httpsRedirect | default "false"}}"
+  {{- if .Values.secureBackend }}
+    ingress.kubernetes.io/secure-backends: "true"
+  {{ end }}
+
+
+spec:
+  # stage: {{ required "please pass in stage with '--set stage={dev|prod}'" .Values.stage }}
+  tls:
+    - secretName: wildcard-prod-breuni-de
+      hosts: ["foo.prod.breuni.de"]
+  rules:
+  {{- $name := .Chart.Name }}
+  {{- $port := .Values.port }}
+  {{- range index .Values.ingress .Values.stage }}
+  {{- if .hosts }}{{ $path := .contextPath }}{{range .hosts}}
+  - host: {{ . }}
+    http:
+      paths:
+      - path: {{ $path }}
+        backend:
+          serviceName: {{ $name }}
+          servicePort: {{ $port }}
+  {{ end }}
+  {{ else }}
+  - http:
+      paths:
+      - path: {{ .contextPath }}
+        backend:
+          serviceName: {{ $name }}
+          servicePort: {{ $port }}
+  {{- end }}{{ end }}

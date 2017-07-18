@@ -1,0 +1,45 @@
+# Kommando, dass bei dem Start des Containers ausgeführt werden soll (auskommentieren, um das default Kommando vom Dockerfile auszuführen)
+command: '["/echo", "-addr", "0.0.0.0:8443", "-tls"]'
+
+# Docker image
+image:
+  repository: kesselborn/echo
+
+# Port auf dem die app im docker container lauscht (z.B. 8080, 8443, etc.)
+containerPort: 8443
+
+# wenn der backend service https spricht, diesen Wert auf true setzen, ansonsten auf false
+secureBackend: true
+
+# leite alle http Anfragen auf https um
+http2httpsRedirect: false
+
+# Port nach außen (80 für http, 3306 für mysql, etc.)
+port: 443
+
+# Anzahl der docker container die in der jeweiligen stage gestartet werden sollen
+replicaCount:
+  dev: 1
+  prod: 1
+
+# Port und Pfad für den Health-Check (port kann, muss aber nicht, gleich dem container port sein)
+# scheme kann entweder HTTP oder HTTPS sein (Großbuchstaben)
+healthCheck:
+  port: 8443
+  path: /health
+  scheme: HTTPS
+
+
+# Menge an Arbeitsspeicher welche diese App maximal verbraucht (docker + jvm + stack + heap)
+memoryLimit: 768Mi
+
+
+# Dies sind Ingress-Regeln für den frontend Proxy
+ingress:
+  dev:
+    - contextPath: /echo
+      hosts: ["foo.dev.breuni.de"]
+
+  prod:
+    - contextPath: /echo
+      hosts: ["foo.prod.breuni.de"]
