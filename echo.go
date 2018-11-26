@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 type Request struct {
@@ -34,27 +33,11 @@ func reqToString(r http.Request) string {
 }
 
 func main() {
-	dummyAddr := "localhost:8080 / localhost:443"
-	addr := flag.String("addr", dummyAddr, "where to listen for connection (default: localhost:8080 or localhost:8443 when tls is enabled)")
+	addr := flag.String("addr", "localhost:8080", "where to listen for connection (default: localhost:8080 or localhost:8443 when tls is enabled)")
 	tls := flag.Bool("tls", false, "listen via tls")
 	flag.Parse()
 
-	go func() {
-		for {
-			fmt.Fprintf(os.Stderr, "stderr log line \n")
-			fmt.Fprintf(os.Stdout, "stdout log line \n")
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	if *addr == dummyAddr {
-		if *tls {
-			*addr = "localhost:8443"
-		} else {
-			*addr = "localhost:8080"
-		}
-	}
-	println("listening for requests on: " + *addr)
+	fmt.Printf("listening for requests on: %s / ssl mode:%t \n", *addr, *tls)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(os.Stdout, "%s\n", reqToString(*r))

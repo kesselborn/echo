@@ -1,5 +1,3 @@
-GOPATH=$(CURDIR)
-
 build: *.go
 	go build
 
